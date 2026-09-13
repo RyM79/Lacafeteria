@@ -123,8 +123,12 @@ h1{font-size:clamp(34px,9vw,60px);line-height:.98;margin:6px 0 2px;
 .accion-obra .pista{margin:6px 0 0;font-size:13px}
 .accion-obra .medidor{margin-bottom:5px}
 .accion-obra .plancha{margin:0 0 8px}
-.grupo{margin-bottom:10px}
+.grupo{margin-bottom:10px;border-radius:14px;transition:.25s;padding:4px 6px}
 .grupo h4{margin:0 0 5px;font-size:15px;font-weight:800;color:#A97F94;letter-spacing:.5px}
+.grupo.activa{background:#FFF3DE;box-shadow:0 0 0 3px var(--mantequilla)}
+.grupo.activa h4{color:var(--fresa-fuerte)}
+.grupo.hecha{opacity:.55}
+.grupo.hecha h4{color:#2E7D5B}
 .ops{display:flex;gap:7px;flex-wrap:wrap}
 .op{width:54px;height:54px;border-radius:16px;box-shadow:0 4px 0 rgba(90,62,76,.22);
   display:grid;place-items:center;font-size:26px;position:relative;transition:.12s;background:#fff}
@@ -257,11 +261,40 @@ h1{font-size:clamp(34px,9vw,60px);line-height:.98;margin:6px 0 2px;
 .pedido-item.hecho{opacity:.4}
 .pedido-item .badge{position:absolute;top:0;left:3px;font-size:15px}
 .pedido-item .check{position:absolute;inset:0;display:grid;place-items:center;font-size:38px}
-.medalla{font-size:54px;line-height:1;animation:brota .5s cubic-bezier(.3,1.7,.5,1) both}
-.tira{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;margin:6px 0}
-.r-item{background:var(--azucar);border-radius:12px;padding:3px 6px;min-width:42px}
-.r-ico{display:block;font-size:20px;line-height:1.1}
-.r-est{font-size:10px;letter-spacing:-1px}
+/* ---------- resumen del día, compacto ---------- */
+.res-cab{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px}
+.res-tit{text-align:left;line-height:1.1}
+.res-tit b{display:block;font-size:23px}
+.res-tit i{font-style:normal;font-size:13px;font-weight:700;color:#A97F94}
+.res-datos{display:flex;gap:6px;margin-bottom:8px}
+.res-datos span{flex:1;background:var(--azucar);border-radius:14px;padding:5px 2px;line-height:1.1}
+.res-datos b{display:block;font-size:20px;color:var(--fresa-fuerte)}
+.res-datos i{font-style:normal;font-size:11.5px;font-weight:700;color:#9A7186}
+.tira{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;margin:0 0 8px}
+.r-item{background:var(--azucar);border-radius:12px;padding:3px 6px;min-width:40px}
+.r-ico{display:block;font-size:19px;line-height:1.1}
+.r-est{font-size:9px;letter-spacing:-1px}
+.carta-tit{margin:0 0 5px!important;font-size:12px;font-weight:800;color:#A97F94;
+  text-transform:uppercase;letter-spacing:1px}
+.carta{display:flex;gap:5px;justify-content:center;flex-wrap:wrap;margin-bottom:8px}
+.carta-item{position:relative;width:38px;height:38px;border-radius:12px;background:var(--azucar);
+  display:grid;place-items:center}
+.ci-ico{font-size:21px;line-height:1}
+.carta-item.cerrado{background:#EFE6EA}
+.carta-item.cerrado .ci-ico{opacity:.3;filter:grayscale(1)}
+.ci-candado{position:absolute;font-size:15px;text-shadow:0 1px 2px rgba(0,0,0,.25)}
+.ci-dia{position:absolute;right:-3px;bottom:-4px;background:#A9909E;color:#fff;font-size:9.5px;
+  font-weight:800;border-radius:999px;padding:0 5px;line-height:1.5}
+.carta-item.nuevo{background:var(--mantequilla);box-shadow:0 0 0 3px #FFF0C2;
+  animation:latido 1.2s ease-in-out infinite}
+.ci-nuevo{position:absolute;bottom:-7px;font-size:8.5px;font-weight:800;color:#fff;
+  background:var(--fresa-fuerte);border-radius:999px;padding:0 5px;white-space:nowrap}
+@keyframes latido{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.manana{color:var(--fresa-fuerte);font-size:14px;line-height:1.25;margin:2px 0 10px!important;
+  font-weight:700}
+.medalla{font-size:46px;line-height:1;animation:brota .5s cubic-bezier(.3,1.7,.5,1) both}
+
+/* ---------- cofre ---------- */
 .filas{background:var(--azucar);border-radius:16px;padding:6px 12px;margin:6px 0;text-align:left}
 .filas div{display:flex;justify-content:space-between;font-size:15px;font-weight:700;padding:1px 0}
 .filas b{color:var(--fresa-fuerte)}
@@ -711,12 +744,16 @@ function dibuja(it,tam){
            stroke="${linea(f.c)}" stroke-width="2.5" transform="rotate(${x%40-20} ${x+9} ${y+9})"/>`);
     d+=`<path d="M90 66 l15 0 l-13 126 l-14 0 Z" fill="rgba(255,255,255,.5)"/></g>`;
     d+=`<path d="${vaso}" fill="none" stroke="#C9B7A6" stroke-width="3.5" stroke-linejoin="round"/>`;
-    if(it.batido && c){
-      d+=`<path d="M74 64 q-6 -26 20 -26 q8 -22 30 -12 q20 -14 32 4 q22 2 16 34 Z"
-           fill="url(#n${u})" stroke="${linea(c)}" stroke-width="3" stroke-linejoin="round"/>`;
-      d+=`<path d="M136 44 L164 8" stroke="#F2678F" stroke-width="10" stroke-linecap="round"/>`;
-      d+=`<path d="M136 44 L164 8" stroke="#fff" stroke-width="10" stroke-linecap="round"
-           stroke-dasharray="9 9"/>`;
+    const kn = it.nata!=null ? it.nata/100 : 1;
+    if(it.batido && c && kn>0){
+      d+=`<g transform="translate(120,66) scale(${(0.35+0.65*kn).toFixed(2)}) translate(-120,-66)">
+          <path d="M74 64 q-6 -26 20 -26 q8 -22 30 -12 q20 -14 32 4 q22 2 16 34 Z"
+           fill="url(#n${u})" stroke="${linea(c)}" stroke-width="3" stroke-linejoin="round"/></g>`;
+      if(kn>=.6){
+        d+=`<path d="M136 44 L164 8" stroke="#F2678F" stroke-width="10" stroke-linecap="round"/>`;
+        d+=`<path d="M136 44 L164 8" stroke="#fff" stroke-width="10" stroke-linecap="round"
+             stroke-dasharray="9 9"/>`;
+      }
       if(it.tops&&it.tops.length) it.tops.forEach(o2=> d+=emoji(pos(o2.id,ADORNOS).e,o2.x,o2.y,26));
       else if(t && !it.tops) d+=emoji(t,110,26,26);
     }
@@ -1331,7 +1368,7 @@ const J={dia:1, oro:0, estrellas:0, cliente:0, porDia:3, pedido:null, obra:null,
 const NUEVO={
   tarta:      ()=>({tipo:'tarta',   a:null, b:null, c:null,
                     cobertura:Array(BANDAS).fill(false), tops:[], modo:null}),
-  batido:     ()=>({tipo:'batido',  a:null, b:null, c:null, batido:false, trozos:0, mezcla:0,
+  batido:     ()=>({tipo:'batido',  a:null, b:null, c:null, batido:false, trozos:0, mezcla:0, nata:0,
                     tops:[], modo:null}),
   galleta:    ()=>({tipo:'galleta', a:null, b:null, c:null,
                     cobertura:Array(BANDAS).fill(false), chispas:[], modo:null}),
@@ -1459,8 +1496,10 @@ function pintaTaller(){
   $('#lienzo').innerHTML=dibuja(o,'lg');
 
   let h='', acc='';                     // acc = lo que va pegado al producto
+  const falta=queFalta(o), activa=falta&&falta.k;
   const fila=(titulo,lista,clave,render,modo)=>{
-    h+=`<div class="grupo"><h4>${titulo}</h4><div class="ops">`;
+    const est = clave===activa ? 'activa' : (o[clave]?'hecha':'');
+    h+=`<div class="grupo ${est}"><h4>${o[clave]?'✓ ':''}${titulo}</h4><div class="ops">`;
     lista.forEach(x=> h+=`<button class="op ${o[clave]===x.id?'sel':''}" data-k="${clave}"
       data-v="${x.id}" ${modo?`data-modo="${modo}"`:''} style="${render(x)}">${x.e||''}</button>`);
     h+=`</div></div>`;
@@ -1469,11 +1508,10 @@ function pintaTaller(){
     fila('Bizcocho', dispo(BIZCOCHOS), 'a', x=>`background:${x.c}`);
     fila('Crema — y úntala con el dedo', dispo(CREMAS), 'b', x=>`background:${x.c}`, 'untar');
     fila('Adornos — ponlos donde quieras', dispo(ADORNOS), 'c', ()=>``, 'poner');
-    h+=`<button class="btn sec chico" id="btn-quitar-top">↩️ Quitar el último adorno</button>`;
   }
   if(o.tipo==='batido'){
     fila('Fruta',    dispo(FRUTAS),    'a', x=>`background:${x.c}`);
-    fila('Nata',     dispo(CREMAS),    'b', x=>`background:${x.c}`);
+    fila('Nata — y apriétala tú', dispo(CREMAS), 'b', x=>`background:${x.c}`, 'nata');
     fila('Encima — y colócalo tú', dispo(ADORNOS), 'c', ()=>``, 'poner');
     acc=`<button class="btn batidora" id="btn-batir" ${(o.batido||o.trozos<3)?'disabled':''}>🌀 ${
       o.batido?'¡Ya está batido!':(o.trozos<3?'Echa antes 3 trozos':'Mantén pulsado para batir')}</button>
@@ -1486,8 +1524,8 @@ function pintaTaller(){
   }
   if(o.tipo==='hamburguesa'){
     fila('Ingrediente — y ponlo tú encima', dispo(RELLENOS), 'c', x=>`background:${x.c}`, 'apilar');
-    h+=`<button class="btn sec chico" id="btn-quitar">↩️ Quitar el de arriba</button>`;
-    h+=`<p class="pista">De abajo arriba, en el mismo orden que pide el cliente</p>`;
+    h+=`<p class="pista">De abajo arriba, en el mismo orden que pide el cliente ·
+        toca el de arriba para quitarlo</p>`;
   }
   if(o.tipo==='cafe'){
     fila('Bebida', dispo(BEBIDAS), 'a', x=>`background:${x.c};color:#fff`);
@@ -1518,7 +1556,7 @@ function pintaTaller(){
           o.a?'Mantén pulsado para freír':'Elige antes qué freír'}</button>
         <p class="pista">Suéltalo cuando lleguen a la zona dorada</p>`;
     } else {
-      h+=`<button class="btn sec chico" id="btn-quitar-frito">↩️ Sacar una</button>`;
+      h+=`<p class="pista">Toca una del cucurucho para sacarla</p>`;
     }
   }
   if(o.tipo==='pizza'){
@@ -1526,7 +1564,6 @@ function pintaTaller(){
     fila('Queso — espárcelo encima', dispo(QUESOS), 'b', ()=>``, 'chispas');
     fila('Ingredientes — ponlos donde quieras', dispo(INGRE), 'c',
       x=>x.c?`background:${x.c}`:``, 'poner');
-    h+=`<button class="btn sec chico" id="btn-quitar-top">↩️ Quitar el último</button>`;
   }
   if(o.tipo==='zumo'){
     fila('Fruta', ZUMOS, 'a', x=>`background:${x.c}`);
@@ -1548,7 +1585,8 @@ function puedeServir(){
   const o=J.obra;
   if(o.tipo==='tarta')   return !!(o.a&&o.b&&o.c) && pctCob(o)>=.85 && o.tops.length>=2;
   if(o.tipo==='galleta') return !!(o.a&&o.b&&o.c) && pctCob(o)>=.85 && o.chispas.length>=8;
-  if(o.tipo==='batido')  return !!(o.a&&o.b&&o.c&&o.batido&&o.trozos>=3&&o.tops.length>=1);
+  if(o.tipo==='batido')  return !!(o.a&&o.b&&o.c&&o.batido&&o.trozos>=3
+                              &&(o.nata||0)>=70&&o.tops.length>=1);
   if(o.tipo==='cafe')    return !!(o.a&&o.c&&o.nivel>5&&o.tops.length>=1);
   if(o.tipo==='gofre')   return !!(o.b&&o.c&&o.coccion>0&&pctCob(o)>=.85&&o.tops.length>=2);
   if(o.tipo==='zumo')    return !!(o.a&&o.c&&o.listo&&o.tops.length>=1);
@@ -1610,13 +1648,18 @@ const PONER={
 };
 function meteFrito(p){
   const o=J.obra;
-  if(o.puestas>=8){ avisa('¡El cucurucho está lleno!'); return false; }
   if(p.x<60||p.x>180||p.y<55||p.y>200) return false;
+  const i=SITIOS.slice(0,o.puestas).findIndex(([x,y])=>Math.hypot(x-p.x,y-p.y)<20);
+  if(i>=0){ o.puestas--; sfx('toc'); return true; }      // tocar una la saca
+  if(o.puestas>=8){ avisa('¡El cucurucho está lleno!'); return false; }
   o.puestas++; sfx('pop'); return true;
 }
 function ponAdorno(p){
   const o=J.obra, cfg=PONER[o.tipo];
   if(!cfg) return false;
+  /* si tocas uno ya puesto, lo quitas */
+  const i=o.tops.findIndex(t=>Math.hypot(t.x-p.x,t.y-p.y)<17);
+  if(i>=0){ o.tops.splice(i,1); sfx('toc'); return true; }
   if(o.tops.length>=cfg.tope){ avisa('¡Ya lleva muchos!'); return false; }
   if(!cfg.vale(p)){ avisa(cfg.aviso); return false; }
   const q=cfg.ajusta?cfg.ajusta(p,o):p;
@@ -1639,11 +1682,23 @@ function ponAdorno(p){
   return s ? 'suave' : true;
 }
 
+/* echar nata apretando sobre el vaso */
+function echaNata(p){
+  const o=J.obra;
+  if((o.nata||0)>=100) return false;
+  if(p.x<66||p.x>176||p.y<6||p.y>110){ avisa('Aprieta sobre el vaso'); return false; }
+  o.nata=Math.min(100,(o.nata||0)+7);
+  if(o.nata%28<7) sfx('untar');
+  return true;
+}
+
 /* poner un ingrediente encima de la hamburguesa */
 function apila(p){
   const o=J.obra;
-  if(o.pila.length>=5){ avisa('¡No caben más!'); return false; }
   if(p.x<40||p.x>200||p.y<30||p.y>200){ avisa('Ponlo en la hamburguesa'); return false; }
+  /* tocar arriba del todo quita la última capa */
+  if(o.pila.length && p.y<92){ o.pila.pop(); sfx('toc'); return true; }
+  if(o.pila.length>=5){ avisa('¡No caben más!'); return false; }
   o.pila.push(o.c); sfx('pop'); return true;
 }
 
@@ -1680,6 +1735,7 @@ function conectaLienzo(){
   const actua=ev=>{
     const o=J.obra; if(!o||!o.modo) return;
     const p=coordSvg(ev); if(!p) return;
+    const pasoAntes=claveFalta(o);
     let cambio=false;
     if(o.modo==='untar')        cambio=unta(p);
     else if(o.modo==='poner')   cambio=ponAdorno(p);
@@ -1687,13 +1743,13 @@ function conectaLienzo(){
     else if(o.modo==='meter')   cambio=meteFrito(p);
     else if(o.modo==='trozos')  cambio=echaTrozo(p);
     else if(o.modo==='apilar')  cambio=apila(p);
+    else if(o.modo==='nata')    cambio=echaNata(p);
     if(cambio){
       if(cambio!=='suave') refrescaObra();      // sólo si no se pudo dibujar al vuelo
-      const antes=o.modo;
       pintaAyuda(); actualizaServir();
-      /* si el gesto ha terminado su paso, hay que repintar los mandos
-         (p. ej. al echar el tercer trozo se desbloquea la batidora) */
-      if(o.modo!==antes) pintaTaller();
+      /* si el gesto ha terminado su paso, se repintan los mandos y se ilumina
+         la fila siguiente (p. ej. al echar el tercer trozo se abre la batidora) */
+      if(claveFalta(o)!==pasoAntes) pintaTaller();
     }
   };
   l.addEventListener('pointerdown',ev=>{
@@ -1712,53 +1768,55 @@ function conectaLienzo(){
 /* Una sola línea de guía: dice siempre qué falta para terminar */
 function queFalta(o){
   const A=ADORNOS, F={
-    tarta:()=> !o.a?'Elige el bizcocho'
-             : !o.b?'Elige el color de la crema'
+    tarta:()=> !o.a?{t:'Elige el bizcocho',k:'a'}
+             : !o.b?{t:'Elige el color de la crema',k:'b'}
              : pctCob(o)<.85?{t:'Unta la crema con el dedo',b:Math.round(pctCob(o)*100),m:'untar'}
-             : !o.c?'Elige un adorno'
+             : !o.c?{t:'Elige un adorno',k:'c'}
              : o.tops.length<2?{t:`Toca la tarta para poner ${pos(o.c,A).e}`,m:'poner'}:null,
-    galleta:()=> !o.a?'Elige el molde'
-             : !o.b?'Elige el color del glaseado'
+    galleta:()=> !o.a?{t:'Elige el molde',k:'a'}
+             : !o.b?{t:'Elige el glaseado',k:'b'}
              : pctCob(o)<.85?{t:'Extiende el glaseado con el dedo',b:Math.round(pctCob(o)*100),m:'untar'}
-             : !o.c?'Elige las chispas'
+             : !o.c?{t:'Elige las chispas',k:'c'}
              : o.chispas.length<8?{t:'Agita el dedo por encima',b:Math.min(100,o.chispas.length*11),m:'chispas'}:null,
-    batido:()=> !o.a?'Elige la fruta'
+    batido:()=> !o.a?{t:'Elige la fruta',k:'a'}
              : o.trozos<3?{t:`Toca el vaso para echar la fruta · ${o.trozos} de 3`,
                            b:Math.round(o.trozos/3*100), m:'trozos'}
-             : !o.batido?'Mantén pulsado para batir'
-             : !o.b?'Elige la nata'
-             : !o.c?'Elige qué poner encima'
+             : !o.batido?{t:'Mantén pulsado para batir'}
+             : !o.b?{t:'Elige la nata',k:'b'}
+             : (o.nata||0)<70?{t:'Aprieta sobre el vaso para echar la nata',b:Math.round(o.nata||0),m:'nata'}
+             : !o.c?{t:'Elige qué poner encima',k:'c'}
              : o.tops.length<1?{t:'Toca la nata para ponerlo',m:'poner'}:null,
-    cafe:()=> !o.a?'Elige la bebida'
-             : o.nivel<=5?'Sirve hasta la raya rosa'
-             : !o.c?'Elige qué espolvorear'
+    cafe:()=> !o.a?{t:'Elige la bebida',k:'a'}
+             : o.nivel<=5?{t:'Sirve hasta la raya rosa'}
+             : !o.c?{t:'Elige qué espolvorear',k:'c'}
              : o.tops.length<1?{t:'Toca la espuma para espolvorearlo',m:'poner'}:null,
-    gofre:()=> !o.coccion?'Sácalo de la plancha en su punto'
-             : !o.b?'Elige el sirope'
+    gofre:()=> !o.coccion?{t:'Sácalo de la plancha en su punto'}
+             : !o.b?{t:'Elige el sirope',k:'b'}
              : pctCob(o)<.85?{t:'Extiende el sirope con el dedo',b:Math.round(pctCob(o)*100),m:'untar'}
-             : !o.c?'Elige la fruta'
+             : !o.c?{t:'Elige la fruta',k:'c'}
              : o.tops.length<2?{t:'Toca el gofre para poner la fruta',m:'poner'}:null,
-    zumo:()=> !o.a?'Elige la fruta'
-             : !o.listo?'Aprieta rápido para exprimir'
-             : !o.c?'Elige la decoración'
+    zumo:()=> !o.a?{t:'Elige la fruta',k:'a'}
+             : !o.listo?{t:'Aprieta rápido para exprimir'}
+             : !o.c?{t:'Elige la decoración',k:'c'}
              : o.tops.length<1?{t:'Tócalo para colocarlo en el vaso',m:'poner'}:null,
-    hamburguesa:()=> !o.c?'Elige un ingrediente'
+    hamburguesa:()=> !o.c?{t:'Elige un ingrediente',k:'c'}
              : o.pila.length<2?{t:'Toca la hamburguesa para ponerlo',m:'apilar'}:null,
-    fritos:()=> !o.a?'Elige qué vas a freír'
-             : !o.frito?'Mantén pulsado hasta que estén doradas'
-             : o.puestas<1?{t:'Toca el cucurucho para meterlas',m:'meter'}
-             : {t:`Mete las que te pida · llevas ${o.puestas}`,m:'meter'},
-    pizza:()=> !o.a?'Elige la salsa'
+    pizza:()=> !o.a?{t:'Elige la salsa',k:'a'}
              : pctCob(o)<.85?{t:'Extiende la salsa con el dedo',b:Math.round(pctCob(o)*100),m:'untar'}
-             : !o.b?'Elige el queso'
+             : !o.b?{t:'Elige el queso',k:'b'}
              : o.chispas.length<10?{t:'Esparce el queso por encima',b:Math.min(100,o.chispas.length*10),m:'chispas'}
-             : !o.c?'Elige un ingrediente'
-             : o.tops.length<3?{t:`Toca la pizza para poner ${
-                 pos(o.c,INGRE).e||'los trozos'}`,m:'poner'}:null
+             : !o.c?{t:'Elige un ingrediente',k:'c'}
+             : o.tops.length<3?{t:`Toca la pizza para poner ${pos(o.c,INGRE).e||'los trozos'}`,m:'poner'}:null,
+    fritos:()=> !o.a?{t:'Elige qué vas a freír',k:'a'}
+             : !o.frito?{t:'Mantén pulsado hasta que estén doradas'}
+             : o.puestas<1?{t:'Toca el cucurucho para meterlas',m:'meter'}
+             : {t:`Mete las que te pida · llevas ${o.puestas}`,m:'meter'}
   }[o.tipo];
-  const r=F?F():null;
-  return typeof r==='string' ? {t:r} : r;
+  return F?F():null;
 }
+
+/* identidad del paso actual, sin el porcentaje: sirve para saber cuándo repintar */
+function claveFalta(o){ const f=queFalta(o); return f ? (f.k||f.m||f.t) : 'listo'; }
 
 function pintaAyuda(){
   const o=J.obra, a=$('#ayuda'); if(!a||!o) return;
@@ -1768,8 +1826,10 @@ function pintaAyuda(){
     a.className='ayuda lista'; a.style.display='flex'; return;
   }
   /* si el paso que falta es de dedo, el dedo se pone en ese modo solo */
-  /* el dedo sigue disponible mientras quieras seguir untando o espolvoreando */
-  o.modo = o.modoElegido || f.m || null;
+  /* el paso actual manda; la elección previa sólo sirve para seguir
+     untando, espolvoreando o colocando más de lo mínimo */
+  const seguibles=['untar','chispas','poner'];
+  o.modo = f.m ? f.m : (seguibles.includes(o.modoElegido) ? o.modoElegido : null);
   a.className='ayuda';
   a.innerHTML=`<span class="a-punta">${f.m?'👆':'👉'}</span><span class="a-txt">${f.t}</span>
     ${f.b!=null?`<span class="a-barra"><i style="width:${f.b}%"></i></span>`:''}`;
@@ -1788,7 +1848,7 @@ function conectaVerter(){
     b.classList.remove('batiendo');
     const c=$('#lienzo .chorro'); if(c) c.remove();
     if(!vertTimer) return; clearInterval(vertTimer); vertTimer=null;
-    sfx('toc'); refrescaObra(); actualizaServir();
+    sfx('toc'); pintaTaller();        // repinta guía, filas y botones al soltar
   };
   const empezar=ev=>{
     ev.preventDefault(); if(vertTimer||J.obra.tipo!=='cafe') return; tic=0;
@@ -1856,7 +1916,7 @@ function conectaBatidora(){
   const parar=()=>{ if(!mezclaTimer) return;
     clearInterval(mezclaTimer); mezclaTimer=null;
     vaso()&&vaso().classList.remove('batiendo');
-    refrescaObra();
+    pintaTaller();
   };
   const arranca=ev=>{
     ev.preventDefault();
@@ -2118,22 +2178,26 @@ function finDeDia(){
   }).join('');
 
   const carta=ESTACIONES.map(e=>{
-    const cerrado=e.dia&&e.dia>J.dia+1;
-    const nuevo=e.dia===J.dia+1;
+    const cerrado=e.dia&&e.dia>J.dia+1, nuevo=e.dia===J.dia+1;
     return `<div class="carta-item ${cerrado?'cerrado':''} ${nuevo?'nuevo':''}">
-      <span>${cerrado?'🔒':e.e}</span>${nuevo?'<b>¡nuevo!</b>':(cerrado?`<b>día ${e.dia}</b>`:'')}</div>`;
+      <span class="ci-ico">${e.e}</span>
+      ${cerrado?`<span class="ci-candado">🔒</span><span class="ci-dia">${e.dia}</span>`:''}
+      ${nuevo?'<span class="ci-nuevo">¡nuevo!</span>':''}</div>`;
   }).join('');
-  panel(`<div class="medalla">${medalla}</div>
-    <h2>${titulo}</h2>
-    <p style="margin-bottom:6px">Fin del día ${J.dia}</p>
-    <div class="tira">${tira}</div>
-    <div class="filas">
-      <div><span>⭐ Estrellas</span><b>${J.estrellasDia} de ${maxEst}</b></div>
-      <div><span>🏆 Perfectos</span><b>${perfectos} de ${hechos}</b></div>
-      <div><span>🪙 Monedas</span><b>${J.oroDia}</b></div>
+  panel(`
+    <div class="res-cab">
+      <span class="medalla">${medalla}</span>
+      <span class="res-tit"><b>${titulo}</b><i>Fin del día ${J.dia}</i></span>
     </div>
-    <p class="carta-tit">Tu carta</p><div class="carta">${carta}</div>
-    ${regalo?`<p class="manana">Mañana en la pastelería:<br>${regalo}</p>`:''}
+    <div class="res-datos">
+      <span><b>${J.estrellasDia}</b><i>de ${maxEst} ⭐</i></span>
+      <span><b>${perfectos}</b><i>de ${hechos} 🏆</i></span>
+      <span><b>${J.oroDia}</b><i>🪙 hoy</i></span>
+    </div>
+    <div class="tira">${tira}</div>
+    <p class="carta-tit">Tu carta</p>
+    <div class="carta">${carta}</div>
+    ${regalo?`<p class="manana">${regalo}</p>`:''}
     <button class="btn" id="btn-dia">☀️ Abrir el día ${J.dia+1}</button>`);
   $('#btn-dia').onclick=()=>{
     J.dia++; J.cliente=0; J.estrellasDia=0; J.oroDia=0; J.propinasDia=0; J.diarioDia=[];
@@ -2218,18 +2282,6 @@ $('#btn-mus').onclick=()=>{
 };
 
 $('#controles').onclick=(e)=>{
-  if(e.target.closest('#btn-quitar')){
-    if(J.obra.pila&&J.obra.pila.length){ J.obra.pila.pop(); sfx('toc'); refrescaObra(); pintaAyuda(); actualizaServir(); }
-    return;
-  }
-  if(e.target.closest('#btn-quitar-frito')){
-    if(J.obra.puestas>0){ J.obra.puestas--; sfx('toc'); refrescaObra(); pintaAyuda(); actualizaServir(); }
-    return;
-  }
-  if(e.target.closest('#btn-quitar-top')){
-    if(J.obra.tops&&J.obra.tops.length){ J.obra.tops.pop(); sfx('toc'); pintaTaller(); }
-    return;
-  }
   const b=e.target.closest('.op');
   if(b){ J.obra[b.dataset.k]=b.dataset.v; sfx('pop');
     b.parentNode.querySelectorAll('.op').forEach(x=>x.classList.remove('sel'));
