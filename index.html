@@ -538,11 +538,11 @@ const ZUMOS=[
 ];
 const PISTAS={
  tarta:'Elige bizcocho, crema y adornos',
- batido:'Elige la fruta y pulsa batir',
+ batido:'Echa la fruta, bate y decora',
  galleta:'Forma, glaseado y chispas',
  hamburguesa:'Apila los ingredientes en orden',
  cafe:'Sirve justo hasta la raya rosa',
- gofre:'Sácalo en el punto dorado',
+ gofre:'Dóralo, unta el sirope y decora',
  zumo:'Aprieta rápido para llenar el vaso',
  pizza:'Salsa, queso e ingredientes',
  fritos:'Fríelos al punto y cuenta los que pide'
@@ -616,7 +616,8 @@ const BANDAS=22;
 const ZONA_UNTAR={
   tarta:  {x0:54, ancho:6.0, y:38, alto:114, minX:44, maxX:196, minY:28, maxY:158},
   galleta:{x0:72, ancho:4.4, y:16, alto:190, minX:40, maxX:200, minY:18, maxY:206},
-  pizza:  {x0:60, ancho:5.5, y:44, alto:146, minX:48, maxX:194, minY:44, maxY:190}
+  pizza:  {x0:60, ancho:5.5, y:44, alto:146, minX:48, maxX:194, minY:44, maxY:190},
+  gofre:  {x0:56, ancho:5.9, y:36, alto:150, minX:48, maxX:192, minY:32, maxY:180}
 };
 /* la primera y la última franja se derraman hacia fuera, para que los bordes
    de la galleta (corazón o estrella) queden cubiertos igual que el centro */
@@ -691,7 +692,9 @@ function dibuja(it,tam){
   if(it.tipo==='batido'){
     const f=it.a?pos(it.a,FRUTAS):null, c=it.b?pos(it.b,CREMAS).c:null,
           t=it.c?pos(it.c,ADORNOS).e:null;
-    const col=f ? (it.batido?f.c:'#F3E7D8') : null;
+    const col = !f ? null
+      : it.batido ? f.c
+      : mezclaColor('#F3E7D8', f.c, Math.min(1,(it.mezcla||0)/100));
     if(col) defs+=degradado('l'+u,col);
     if(c) defs+=degradado('n'+u,c);
     const vaso='M72 62 L168 62 L156 188 q-1 10 -11 10 L95 198 q-10 0 -11 -10 Z';
@@ -699,8 +702,11 @@ function dibuja(it,tam){
     d+=sombraSuelo(120,202,54);
     d+=`<path d="${vaso}" fill="#FBF6EF"/>`;
     d+=`<g clip-path="url(#v${u})">`;
-    if(col) d+=`<rect x="70" y="${it.batido?68:100}" width="102" height="140" fill="url(#l${u})"/>`;
-    if(f && !it.batido) [[92,118],[128,144],[104,168],[138,112]].forEach(([x,y])=>
+    if(col) d+=`<rect class="liq-batido" x="70" y="${it.batido?68:100}" width="102" height="140"
+      fill="url(#l${u})"/>`;
+    if(f && !it.batido) [[92,118],[128,144],[104,168],[138,112]]
+      .slice(0, Math.max(0, (it.trozos!=null?it.trozos:4) - Math.floor((it.mezcla||0)/34)))
+      .forEach(([x,y])=>
       d+=`<rect x="${x}" y="${y}" width="18" height="18" rx="5" fill="${f.c}"
            stroke="${linea(f.c)}" stroke-width="2.5" transform="rotate(${x%40-20} ${x+9} ${y+9})"/>`);
     d+=`<path d="M90 66 l15 0 l-13 126 l-14 0 Z" fill="rgba(255,255,255,.5)"/></g>`;
@@ -711,7 +717,8 @@ function dibuja(it,tam){
       d+=`<path d="M136 44 L164 8" stroke="#F2678F" stroke-width="10" stroke-linecap="round"/>`;
       d+=`<path d="M136 44 L164 8" stroke="#fff" stroke-width="10" stroke-linecap="round"
            stroke-dasharray="9 9"/>`;
-      if(t) d+=emoji(t,110,26,26);
+      if(it.tops&&it.tops.length) it.tops.forEach(o2=> d+=emoji(pos(o2.id,ADORNOS).e,o2.x,o2.y,26));
+      else if(t && !it.tops) d+=emoji(t,110,26,26);
     }
   }
 
@@ -838,7 +845,8 @@ function dibuja(it,tam){
     }
     d+=`<path d="M62 86 h116 v78 q0 24 -24 24 h-68 q-24 0 -24 -24 Z" fill="none" stroke="#D9C2AE"
          stroke-width="3.5" stroke-linejoin="round"/>`;
-    if(alto>16 && t) d+=emoji(t,120,188-alto+2,24);
+    if(it.tops&&it.tops.length) it.tops.forEach(o2=> d+=emoji(pos(o2.id,ENCIMA).e,o2.x,o2.y,24));
+    else if(alto>16 && t && !it.tops) d+=emoji(t,120,188-alto+2,24);
     if(alto>16) d+=`<path d="M96 72 q-8 -16 4 -26 q10 -10 2 -24" stroke="rgba(160,130,110,.5)"
       stroke-width="5" fill="none" stroke-linecap="round"/>
       <path d="M132 74 q-8 -14 4 -24" stroke="rgba(160,130,110,.4)" stroke-width="5" fill="none"
@@ -860,12 +868,25 @@ function dibuja(it,tam){
            stroke-width="3.5" opacity=".55"/>`;
     }
     if(it.coccion && s){
-      d+=`<path d="M54 74 C54 50 186 50 186 74 L186 90 q-11 22 -22 0 q-11 22 -22 0 q-11 22 -22 0
-           q-11 22 -22 0 q-11 22 -22 0 q-11 22 -22 0 Z" fill="url(#s${u})" stroke="${linea(s)}"
-           stroke-width="3.5" stroke-linejoin="round"/>`;
+      const sir=`M54 74 C54 50 186 50 186 74 L186 90 q-11 22 -22 0 q-11 22 -22 0 q-11 22 -22 0
+           q-11 22 -22 0 q-11 22 -22 0 q-11 22 -22 0 Z`;
+      if(it.cobertura){
+        const z=ZONA_UNTAR.gofre;
+        defs+=`<clipPath id="k${u}" class="cob">${it.cobertura.map((v,i)=>{ if(!v) return '';
+          const r=bandaRect(z,i);
+          return `<rect x="${r.x}" y="${r.y}" width="${r.width}" height="${r.height}"/>`;}).join('')}</clipPath>`;
+        d+=`<path d="${sir}" fill="none" stroke="${tono(s,.45)}" stroke-width="3"
+             stroke-dasharray="9 8" opacity=".9"/>`;
+        d+=`<g clip-path="url(#k${u})"><path d="${sir}" fill="url(#s${u})" stroke="${linea(s)}"
+             stroke-width="3.5" stroke-linejoin="round"/></g>`;
+      } else {
+        d+=`<path d="${sir}" fill="url(#s${u})" stroke="${linea(s)}" stroke-width="3.5"
+             stroke-linejoin="round"/>`;
+      }
       d+=`<path d="M74 66 q14 -12 34 -13" stroke="rgba(255,255,255,.35)" stroke-width="6"
-           stroke-linecap="round" fill="none"/>`;
-      if(t) [[80,52],[120,42],[160,52]].forEach(([x,y])=> d+=emoji(t,x,y,28));
+           stroke-linecap="round" fill="none" opacity="${it.cobertura?pctCob(it):1}"/>`;
+      if(it.tops&&it.tops.length) it.tops.forEach(o2=> d+=emoji(pos(o2.id,ADORNOS).e,o2.x,o2.y,28));
+      else if(t && !it.tops) [[80,52],[120,42],[160,52]].forEach(([x,y])=> d+=emoji(t,x,y,28));
     }
   }
 
@@ -888,7 +909,8 @@ function dibuja(it,tam){
     d+=`<path d="M138 74 L166 16" stroke="#fff" stroke-width="10" stroke-linecap="round"
          stroke-dasharray="9 9"/>`;
     if(f) d+=emoji(f.e,74,194-alto+6,26);
-    if(it.listo && t) d+=emoji(t,120,34,26);
+    if(it.tops&&it.tops.length) it.tops.forEach(o2=> d+=emoji(pos(o2.id,ADORNOS).e,o2.x,o2.y,26));
+    else if(it.listo && t && !it.tops) d+=emoji(t,120,34,26);
   }
 
   if(it.tipo==='fritos'){
@@ -1309,13 +1331,15 @@ const J={dia:1, oro:0, estrellas:0, cliente:0, porDia:3, pedido:null, obra:null,
 const NUEVO={
   tarta:      ()=>({tipo:'tarta',   a:null, b:null, c:null,
                     cobertura:Array(BANDAS).fill(false), tops:[], modo:null}),
-  batido:     ()=>({tipo:'batido',  a:null, b:null, c:null, batido:false}),
+  batido:     ()=>({tipo:'batido',  a:null, b:null, c:null, batido:false, trozos:0, mezcla:0,
+                    tops:[], modo:null}),
   galleta:    ()=>({tipo:'galleta', a:null, b:null, c:null,
                     cobertura:Array(BANDAS).fill(false), chispas:[], modo:null}),
-  hamburguesa:()=>({tipo:'hamburguesa', pila:[]}),
-  cafe:       ()=>({tipo:'cafe',    a:null, c:null, nivel:0, objetivo:70}),
-  gofre:      ()=>({tipo:'gofre',   b:null, c:null, coccion:0}),
-  zumo:       ()=>({tipo:'zumo',    a:null, c:null, llenado:0, listo:false}),
+  hamburguesa:()=>({tipo:'hamburguesa', pila:[], c:null, modo:null}),
+  cafe:       ()=>({tipo:'cafe',    a:null, c:null, nivel:0, objetivo:70, tops:[], modo:null}),
+  gofre:      ()=>({tipo:'gofre',   b:null, c:null, coccion:0,
+                    cobertura:Array(BANDAS).fill(false), tops:[], modo:null}),
+  zumo:       ()=>({tipo:'zumo',    a:null, c:null, llenado:0, listo:false, tops:[], modo:null}),
   pizza:      ()=>({tipo:'pizza',   a:null, b:null, c:null,
                     cobertura:Array(BANDAS).fill(false), chispas:[], tops:[], modo:null}),
   fritos:     ()=>({tipo:'fritos',  a:null, dorado:0, frito:false, puestas:0, modo:null})
@@ -1337,10 +1361,22 @@ function marcadores(){
 }
 
 /* --------- generar pedido --------- */
-function nuevoPedido(){
-  let tipo=azar(dispo(ESTACIONES)).id;
-  if(tipo===J.ultimoTipo) tipo=azar(dispo(ESTACIONES)).id;   // evita repetir dos veces seguidas
+/* Bolsa de pedidos: se barajan todos los puestos abiertos y se van sacando.
+   Así aparecen todos antes de que se repita ninguno. */
+function sacaTipo(){
+  const abiertos=dispo(ESTACIONES).map(e=>e.id);
+  J.bolsa=(J.bolsa||[]).filter(t=>abiertos.includes(t));
+  if(!J.bolsa.length){
+    J.bolsa=mezcla(abiertos.slice());
+    if(J.bolsa.length>1 && J.bolsa[0]===J.ultimoTipo) J.bolsa.push(J.bolsa.shift());
+  }
+  const tipo=J.bolsa.shift();
   J.ultimoTipo=tipo;
+  return tipo;
+}
+
+function nuevoPedido(){
+  const tipo=sacaTipo();
   const p={tipo};
   if(tipo==='tarta'){ p.a=azar(dispo(BIZCOCHOS)).id; p.b=azar(dispo(CREMAS)).id; p.c=azar(dispo(ADORNOS)).id; }
   if(tipo==='batido'){ p.a=azar(dispo(FRUTAS)).id; p.b=azar(dispo(CREMAS)).id; p.c=azar(dispo(ADORNOS)).id; p.batido=true; }
@@ -1438,9 +1474,10 @@ function pintaTaller(){
   if(o.tipo==='batido'){
     fila('Fruta',    dispo(FRUTAS),    'a', x=>`background:${x.c}`);
     fila('Nata',     dispo(CREMAS),    'b', x=>`background:${x.c}`);
-    fila('Adornos',  dispo(ADORNOS),   'c', ()=>``);
-    acc=`<button class="btn batidora" id="btn-batir" ${(o.batido||!o.a)?'disabled':''}>🌀 ${
-      o.batido?'¡Ya está batido!':(o.a?'¡Batir!':'Elige antes la fruta')}</button>`;
+    fila('Encima — y colócalo tú', dispo(ADORNOS), 'c', ()=>``, 'poner');
+    acc=`<button class="btn batidora" id="btn-batir" ${(o.batido||o.trozos<3)?'disabled':''}>🌀 ${
+      o.batido?'¡Ya está batido!':(o.trozos<3?'Echa antes 3 trozos':'Mantén pulsado para batir')}</button>
+      <div class="medidor"><div class="relleno" id="mezcla-bar" style="width:${o.mezcla||0}%"></div></div>`;
   }
   if(o.tipo==='galleta'){
     fila('Forma',    FORMAS,           'a', ()=>``);
@@ -1448,18 +1485,16 @@ function pintaTaller(){
     fila('Chispas — agítalas encima', CHISPAS, 'c', ()=>``, 'chispas');
   }
   if(o.tipo==='hamburguesa'){
-    h+=`<div class="grupo"><h4>Ingredientes (de abajo a arriba)</h4><div class="ops">`;
-    dispo(RELLENOS).forEach(r=> h+=`<button class="op" data-ing="${r.id}" style="background:${r.c}">${r.e}</button>`);
-    h+=`</div></div>`;
-    h+=`<button class="btn sec" id="btn-quitar">↩️ Quitar el de arriba</button>`;
-    h+=`<p class="pista">Toca los ingredientes en el mismo orden que pide el cliente</p>`;
+    fila('Ingrediente — y ponlo tú encima', dispo(RELLENOS), 'c', x=>`background:${x.c}`, 'apilar');
+    h+=`<button class="btn sec chico" id="btn-quitar">↩️ Quitar el de arriba</button>`;
+    h+=`<p class="pista">De abajo arriba, en el mismo orden que pide el cliente</p>`;
   }
   if(o.tipo==='cafe'){
     fila('Bebida', dispo(BEBIDAS), 'a', x=>`background:${x.c};color:#fff`);
     acc=`<button class="btn batidora" id="btn-verter" ${o.a?'':'disabled'}>🫖 ${
       o.a?'Mantén pulsado para servir':'Elige antes la bebida'}</button>
       <p class="pista">Suelta justo en la raya rosa</p>`;
-    fila('Por encima', dispo(ENCIMA), 'c', ()=>``);
+    fila('Por encima — y colócalo tú', dispo(ENCIMA), 'c', ()=>``, 'poner');
   }
   if(o.tipo==='gofre'){
     if(!o.coccion){
@@ -1470,8 +1505,8 @@ function pintaTaller(){
         <p class="pista">Párala en la zona dorada</p>`;
       h+=`<p class="pista">Primero hay que hacer el gofre 👈</p>`;
     } else {
-      fila('Sirope', dispo(SIROPES), 'b', x=>`background:${x.c}`);
-      fila('Fruta',  dispo(ADORNOS), 'c', ()=>``);
+      fila('Sirope — y extiéndelo con el dedo', dispo(SIROPES), 'b', x=>`background:${x.c}`, 'untar');
+      fila('Fruta — y colócala tú', dispo(ADORNOS), 'c', ()=>``, 'poner');
     }
   }
   if(o.tipo==='fritos'){
@@ -1500,12 +1535,12 @@ function pintaTaller(){
       <button class="btn batidora" id="btn-exprimir" ${(o.listo||!o.a)?'disabled':''}>
         ${o.listo?'🍹 ¡Zumo listo!':(o.a?'🍋 ¡Aprieta rápido!':'Elige antes la fruta')}</button>
       <p class="pista">Toca muchas veces seguidas</p>`;
-    fila('Decoración', dispo(ADORNOS), 'c', ()=>``);
+    fila('Decoración — y colócala tú', dispo(ADORNOS), 'c', ()=>``, 'poner');
   }
   $('#controles').innerHTML=h;
   $('#accion-obra').innerHTML=acc;
   conectaLienzo(); pintaAyuda();
-  conectaFreidora(); conectaVerter(); conectaPlancha(); conectaZumo(); actualizaServir();
+  conectaFreidora(); conectaBatidora(); conectaVerter(); conectaPlancha(); conectaZumo(); actualizaServir();
 }
 
 /* --------- ¿se puede servir ya? --------- */
@@ -1513,10 +1548,10 @@ function puedeServir(){
   const o=J.obra;
   if(o.tipo==='tarta')   return !!(o.a&&o.b&&o.c) && pctCob(o)>=.85 && o.tops.length>=2;
   if(o.tipo==='galleta') return !!(o.a&&o.b&&o.c) && pctCob(o)>=.85 && o.chispas.length>=8;
-  if(o.tipo==='batido')  return !!(o.a&&o.b&&o.c&&o.batido);
-  if(o.tipo==='cafe')    return !!(o.a&&o.c&&o.nivel>5);
-  if(o.tipo==='gofre')   return !!(o.b&&o.c&&o.coccion>0);
-  if(o.tipo==='zumo')    return !!(o.a&&o.c&&o.listo);
+  if(o.tipo==='batido')  return !!(o.a&&o.b&&o.c&&o.batido&&o.trozos>=3&&o.tops.length>=1);
+  if(o.tipo==='cafe')    return !!(o.a&&o.c&&o.nivel>5&&o.tops.length>=1);
+  if(o.tipo==='gofre')   return !!(o.b&&o.c&&o.coccion>0&&pctCob(o)>=.85&&o.tops.length>=2);
+  if(o.tipo==='zumo')    return !!(o.a&&o.c&&o.listo&&o.tops.length>=1);
   if(o.tipo==='fritos')  return !!(o.a&&o.frito&&o.puestas>=1);
   if(o.tipo==='pizza')   return !!(o.a&&o.b&&o.c) && pctCob(o)>=.85
                               && o.chispas.length>=10 && o.tops.length>=3;
@@ -1556,6 +1591,23 @@ function unta(p){
   return cp ? 'suave' : true;
 }
 const enPizza=(p,r)=>Math.hypot(p.x-120,p.y-112)<r;
+/* dónde se pueden colocar cosas en cada producto */
+const PONER={
+  tarta:  {lista:()=>ADORNOS, tam:30, min:2, tope:6, aviso:'Ponlo encima de la tarta',
+           vale:p=>p.x>48&&p.x<192&&p.y>28&&p.y<142},
+  pizza:  {lista:()=>INGRE,   tam:26, min:3, tope:8, aviso:'Ponlo encima de la pizza',
+           vale:p=>enPizza(p,60)},
+  cafe:   {lista:()=>ENCIMA,  tam:24, min:1, tope:4, aviso:'Ponlo sobre la espuma',
+           vale:p=>p.x>66&&p.x<174&&p.y>70&&p.y<186,
+           ajusta:(p,o)=>({x:Math.max(78,Math.min(162,p.x)),
+                           y:188-Math.min(o.nivel,100)/100*94-4})},
+  gofre:  {lista:()=>ADORNOS, tam:28, min:2, tope:6, aviso:'Ponlo encima del gofre',
+           vale:p=>p.x>56&&p.x<184&&p.y>34&&p.y<160},
+  batido: {lista:()=>ADORNOS, tam:26, min:1, tope:4, aviso:'Ponlo sobre la nata',
+           vale:p=>p.x>68&&p.x<174&&p.y>8&&p.y<96},
+  zumo:   {lista:()=>ADORNOS, tam:26, min:1, tope:4, aviso:'Ponlo en el vaso',
+           vale:p=>p.x>72&&p.x<168&&p.y>24&&p.y<150}
+};
 function meteFrito(p){
   const o=J.obra;
   if(o.puestas>=8){ avisa('¡El cucurucho está lleno!'); return false; }
@@ -1563,28 +1615,44 @@ function meteFrito(p){
   o.puestas++; sfx('pop'); return true;
 }
 function ponAdorno(p){
-  const o=J.obra, pizza=o.tipo==='pizza';
-  const tope=pizza?8:6;
-  if(o.tops.length>=tope){ avisa('¡Ya lleva muchos!'); return false; }
-  const vale = pizza ? enPizza(p,60) : !(p.y<30||p.y>140||p.x<50||p.x>190);
-  if(!vale){ avisa(pizza?'Ponlo encima de la pizza':'Ponlo encima de la tarta'); return false; }
-  o.tops.push({id:o.c, x:p.x, y:p.y});
+  const o=J.obra, cfg=PONER[o.tipo];
+  if(!cfg) return false;
+  if(o.tops.length>=cfg.tope){ avisa('¡Ya lleva muchos!'); return false; }
+  if(!cfg.vale(p)){ avisa(cfg.aviso); return false; }
+  const q=cfg.ajusta?cfg.ajusta(p,o):p;
+  o.tops.push({id:o.c, x:q.x, y:q.y});
   const s=svgRaiz();
   if(s){
-    const g=pizza?pos(o.c,INGRE):pos(o.c,ADORNOS);
+    const g=pos(o.c,cfg.lista());
     if(g.e){
-      const t=svgEl('text',{x:p.x, y:p.y, 'font-size':pizza?26:30, 'text-anchor':'middle',
+      const t=svgEl('text',{x:q.x, y:q.y, 'font-size':cfg.tam, 'text-anchor':'middle',
         'dominant-baseline':'central', class:'nace'});
       t.textContent=g.e; s.appendChild(t);
     } else {
-      s.appendChild(svgEl('circle',{cx:p.x, cy:p.y, r:13, fill:g.c,
+      s.appendChild(svgEl('circle',{cx:q.x, cy:q.y, r:13, fill:g.c,
         stroke:linea(g.c), 'stroke-width':2.5, class:'nace'}));
-      s.appendChild(svgEl('circle',{cx:p.x-4, cy:p.y-4, r:4,
+      s.appendChild(svgEl('circle',{cx:q.x-4, cy:q.y-4, r:4,
         fill:tono(g.c,.3), opacity:.7, class:'nace'}));
     }
   }
   sfx('pop');
   return s ? 'suave' : true;
+}
+
+/* poner un ingrediente encima de la hamburguesa */
+function apila(p){
+  const o=J.obra;
+  if(o.pila.length>=5){ avisa('¡No caben más!'); return false; }
+  if(p.x<40||p.x>200||p.y<30||p.y>200){ avisa('Ponlo en la hamburguesa'); return false; }
+  o.pila.push(o.c); sfx('pop'); return true;
+}
+
+/* echar trozos de fruta al vaso de la batidora */
+function echaTrozo(p){
+  const o=J.obra;
+  if(o.trozos>=3) return false;
+  if(p.x<70||p.x>172||p.y<58||p.y>198){ avisa('Échalos dentro del vaso'); return false; }
+  o.trozos++; sfx('pop'); return true;
 }
 function espolvorea(p){
   const o=J.obra, pizza=o.tipo==='pizza';
@@ -1617,6 +1685,8 @@ function conectaLienzo(){
     else if(o.modo==='poner')   cambio=ponAdorno(p);
     else if(o.modo==='chispas') cambio=espolvorea(p);
     else if(o.modo==='meter')   cambio=meteFrito(p);
+    else if(o.modo==='trozos')  cambio=echaTrozo(p);
+    else if(o.modo==='apilar')  cambio=apila(p);
     if(cambio){
       if(cambio!=='suave') refrescaObra();      // sólo si no se pudo dibujar al vuelo
       pintaAyuda(); actualizaServir();
@@ -1649,17 +1719,27 @@ function queFalta(o){
              : !o.c?'Elige las chispas'
              : o.chispas.length<8?{t:'Agita el dedo por encima',b:Math.min(100,o.chispas.length*11),m:'chispas'}:null,
     batido:()=> !o.a?'Elige la fruta'
+             : o.trozos<3?{t:`Toca el vaso para echar la fruta · ${o.trozos} de 3`,
+                           b:Math.round(o.trozos/3*100), m:'trozos'}
              : !o.batido?'Mantén pulsado para batir'
-             : !o.b?'Elige la nata' : !o.c?'Elige qué poner encima':null,
+             : !o.b?'Elige la nata'
+             : !o.c?'Elige qué poner encima'
+             : o.tops.length<1?{t:'Toca la nata para ponerlo',m:'poner'}:null,
     cafe:()=> !o.a?'Elige la bebida'
              : o.nivel<=5?'Sirve hasta la raya rosa'
-             : !o.c?'Elige qué espolvorear':null,
+             : !o.c?'Elige qué espolvorear'
+             : o.tops.length<1?{t:'Toca la espuma para espolvorearlo',m:'poner'}:null,
     gofre:()=> !o.coccion?'Sácalo de la plancha en su punto'
-             : !o.b?'Elige el sirope' : !o.c?'Elige la fruta':null,
+             : !o.b?'Elige el sirope'
+             : pctCob(o)<.85?{t:'Extiende el sirope con el dedo',b:Math.round(pctCob(o)*100),m:'untar'}
+             : !o.c?'Elige la fruta'
+             : o.tops.length<2?{t:'Toca el gofre para poner la fruta',m:'poner'}:null,
     zumo:()=> !o.a?'Elige la fruta'
              : !o.listo?'Aprieta rápido para exprimir'
-             : !o.c?'Elige la decoración':null,
-    hamburguesa:()=> o.pila.length<2?'Apila los ingredientes':null,
+             : !o.c?'Elige la decoración'
+             : o.tops.length<1?{t:'Tócalo para colocarlo en el vaso',m:'poner'}:null,
+    hamburguesa:()=> !o.c?'Elige un ingrediente'
+             : o.pila.length<2?{t:'Toca la hamburguesa para ponerlo',m:'apilar'}:null,
     fritos:()=> !o.a?'Elige qué vas a freír'
              : !o.frito?'Mantén pulsado hasta que estén doradas'
              : o.puestas<1?{t:'Toca el cucurucho para meterlas',m:'meter'}
@@ -1764,6 +1844,38 @@ function conectaZumo(){
   };
 }
 
+/* --------- mecánica: batidora (mantener pulsado) --------- */
+let mezclaTimer=null;
+function conectaBatidora(){
+  const b=$('#btn-batir'); if(!b) return;
+  const vaso=()=>$('#lienzo .caja');
+  const parar=()=>{ if(!mezclaTimer) return;
+    clearInterval(mezclaTimer); mezclaTimer=null;
+    vaso()&&vaso().classList.remove('batiendo');
+    refrescaObra();
+  };
+  const arranca=ev=>{
+    ev.preventDefault();
+    if(mezclaTimer||J.obra.batido||J.obra.trozos<3) return;
+    vaso()&&vaso().classList.add('batiendo');
+    let tic=0;
+    mezclaTimer=setInterval(()=>{
+      J.obra.mezcla=Math.min(100,(J.obra.mezcla||0)+4);
+      const bar=$('#mezcla-bar'); if(bar) bar.style.width=J.obra.mezcla+'%';
+      const f=pos(J.obra.a,FRUTAS), l=$('#lienzo .liq-batido');
+      if(l) l.setAttribute('fill', mezclaColor('#F3E7D8', f.c, J.obra.mezcla/100));
+      if(++tic%6===0){ sfx('batir'); refrescaObra(); vaso()&&vaso().classList.add('batiendo'); }
+      if(J.obra.mezcla>=100){
+        parar(); J.obra.batido=true; sfx('bien'); confeti(12);
+        pintaTaller(); pintaAyuda(); actualizaServir();
+      }
+    },40);
+  };
+  b.addEventListener('pointerdown',arranca);
+  b.addEventListener('touchstart',arranca,{passive:false});
+  ['pointerup','pointerleave','pointercancel','touchend'].forEach(e=>b.addEventListener(e,parar));
+}
+
 /* --------- mecánica: freidora (tú decides cuánto se doran) --------- */
 let friTimer=null;
 function conectaFreidora(){
@@ -1832,15 +1944,15 @@ function puntua(p,o){
   } else if(p.tipo==='cafe'){
     if(p.a===o.a) est++;
     if(Math.abs(p.nivel-o.nivel)<=8) est++;
-    if(p.c===o.c) est++;
+    if(p.c===o.c && o.tops.length>=1) est++;
   } else if(p.tipo==='zumo'){
     if(o.listo) est++;
     if(p.a===o.a) est++;
-    if(p.c===o.c) est++;
+    if(p.c===o.c && o.tops.length>=1) est++;
   } else if(p.tipo==='gofre'){
     if(o.coccion===2) est++;
-    if(p.b===o.b) est++;
-    if(p.c===o.c) est++;
+    if(p.b===o.b && pctCob(o)>=.85) est++;
+    if(p.c===o.c && o.tops.length>=2) est++;
   } else if(p.tipo==='tarta'){
     if(p.a===o.a) est++;
     if(p.b===o.b && pctCob(o)>=.85) est++;
@@ -2102,6 +2214,10 @@ $('#btn-mus').onclick=()=>{
 };
 
 $('#controles').onclick=(e)=>{
+  if(e.target.closest('#btn-quitar')){
+    if(J.obra.pila&&J.obra.pila.length){ J.obra.pila.pop(); sfx('toc'); refrescaObra(); pintaAyuda(); actualizaServir(); }
+    return;
+  }
   if(e.target.closest('#btn-quitar-frito')){
     if(J.obra.puestas>0){ J.obra.puestas--; sfx('toc'); refrescaObra(); pintaAyuda(); actualizaServir(); }
     return;
@@ -2109,15 +2225,6 @@ $('#controles').onclick=(e)=>{
   if(e.target.closest('#btn-quitar-top')){
     if(J.obra.tops&&J.obra.tops.length){ J.obra.tops.pop(); sfx('toc'); pintaTaller(); }
     return;
-  }
-  const ing=e.target.closest('[data-ing]');
-  if(ing){
-    if(J.obra.pila.length>=5){ avisa('¡La torre ya está muy alta!'); sfx('ups'); return; }
-    J.obra.pila.push(ing.dataset.ing); sfx('pop'); refrescaObra(); actualizaServir(); return;
-  }
-  if(e.target.closest('#btn-quitar')){
-    if(!J.obra.pila.length) return;
-    J.obra.pila.pop(); sfx('toc'); refrescaObra(); actualizaServir(); return;
   }
   const b=e.target.closest('.op');
   if(b){ J.obra[b.dataset.k]=b.dataset.v; sfx('pop');
@@ -2127,15 +2234,6 @@ $('#controles').onclick=(e)=>{
 };
 
 /* la batidora vive pegada al vaso, así que escucha ahí */
-$('#accion-obra').onclick=(e)=>{
-  if(!e.target.closest('#btn-batir')) return;
-  const btn=$('#btn-batir'), vaso=$('#lienzo .caja');
-  if(!btn||btn.disabled||!vaso) return;
-  btn.disabled=true; vaso.classList.add('batiendo'); sfx('batir');
-  setTimeout(()=>{ vaso.classList.remove('batiendo'); J.obra.batido=true;
-    sfx('pop'); confeti(10); pintaTaller(); },900);
-};
-
 $('#btn-limpiar').onclick=()=>{ J.obra=NUEVO[J.obra.tipo](); sfx('toc'); pintaTaller(); };
 $('#btn-servir').onclick=servir;
 </script>
