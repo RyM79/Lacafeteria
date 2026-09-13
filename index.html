@@ -1689,7 +1689,11 @@ function conectaLienzo(){
     else if(o.modo==='apilar')  cambio=apila(p);
     if(cambio){
       if(cambio!=='suave') refrescaObra();      // sólo si no se pudo dibujar al vuelo
+      const antes=o.modo;
       pintaAyuda(); actualizaServir();
+      /* si el gesto ha terminado su paso, hay que repintar los mandos
+         (p. ej. al echar el tercer trozo se desbloquea la batidora) */
+      if(o.modo!==antes) pintaTaller();
     }
   };
   l.addEventListener('pointerdown',ev=>{
